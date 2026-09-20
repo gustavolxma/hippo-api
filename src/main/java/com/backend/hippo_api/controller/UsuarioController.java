@@ -7,6 +7,7 @@ import com.backend.hippo_api.business.dtos.out.UsuarioBuscaDadosDTOResponse;
 import com.backend.hippo_api.business.dtos.out.UsuarioCadastroDTOResponse;
 import com.backend.hippo_api.infrastructure.security.JwtUtil;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class UsuarioController {
     private final JwtUtil jwtUtil;
 
     @PostMapping
-    public ResponseEntity<UsuarioCadastroDTOResponse> cadastrarUsuario(@RequestBody UsuarioCadastroDTORequest usuarioDTO) {
+    public ResponseEntity<UsuarioCadastroDTOResponse> cadastrarUsuario(@Valid @RequestBody UsuarioCadastroDTORequest usuarioDTO) {
         return ResponseEntity.ok(usuarioService.cadastrarUsuario(usuarioDTO));
     }
 

@@ -24,6 +24,7 @@ public class Tarefa {
     private String nomeTarefa;
     @Column(name = "descricao", nullable = false)
     private String descricao;
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 9)
     private StatusTarefaEnum statusTarefa;
     @Column(name = "data_criacao")
@@ -31,6 +32,7 @@ public class Tarefa {
     @Column(name = "data_evento", nullable = false)
     private LocalDateTime dataEvento;
 
-    @Column(name = "id_usuario")
-    private Long idUsuario;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario", nullable = false)
+    private Usuario usuario;
 }

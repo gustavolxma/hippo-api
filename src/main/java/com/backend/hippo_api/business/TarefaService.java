@@ -8,9 +8,7 @@ import com.backend.hippo_api.infrastructure.entity.Usuario;
 import com.backend.hippo_api.infrastructure.enums.StatusTarefaEnum;
 import com.backend.hippo_api.infrastructure.exceptions.ResourceNotFoundException;
 import com.backend.hippo_api.infrastructure.repository.TarefaRepository;
-
 import com.backend.hippo_api.infrastructure.repository.UsuarioRepository;
-import com.backend.hippo_api.infrastructure.security.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,12 +22,10 @@ public class TarefaService {
 
     private final TarefaRepository tarefaRepository;
     private final TarefaConverter tarefaConverter;
-    private final JwtUtil jwtUtil;
     private final UsuarioRepository usuarioRepository;
 
-    public TarefaCadastroDTOResponse cadastrarTarefa(TarefaCadastroDTORequest tarefaDTO, String token) {
-        // Pegar o Usuário responsável pela Tarefa através do Email extraído do Token
-        String email = jwtUtil.extractUsername(token.substring(7));
+    public TarefaCadastroDTOResponse cadastrarTarefa(TarefaCadastroDTORequest tarefaDTO, String email) {
+        // Pegar o Usuário responsável pela Tarefa através do Email
         Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow(
                 () -> new ResourceNotFoundException("Erro: Usuário de Email " + email + " não Encontrado!")
         );
@@ -40,7 +36,7 @@ public class TarefaService {
         // Setar o Status da Tarefa como PENDENTE e o Horário da Criação (atual) e ID do Usuário
         tarefa.setStatusTarefa(StatusTarefaEnum.PENDENTE);
         tarefa.setDataCriacao(LocalDateTime.now());
-        tarefa.setIdUsuario(usuario.getId());
+        tarefa.setUsuario(usuario);
 
         // Salvar no Banco de Dados
         return tarefaConverter.converterParaTarefaDTOCadastro(
