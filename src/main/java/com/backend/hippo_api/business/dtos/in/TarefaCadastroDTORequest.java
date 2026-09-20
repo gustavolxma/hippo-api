@@ -1,4 +1,4 @@
-package com.backend.hippo_api.business.dtos.out;
+package com.backend.hippo_api.business.dtos.in;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -11,10 +11,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UsuarioBuscaDadosDTOResponse {
-    private Long id;
-    private String nome;
-    private String email;
+public class TarefaCadastroDTORequest {
+    private String nomeTarefa;
+    private String descricao;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
-    private LocalDateTime dataCadastro;
+    private LocalDateTime dataEvento;
 }
