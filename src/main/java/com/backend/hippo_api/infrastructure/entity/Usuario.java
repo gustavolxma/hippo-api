@@ -33,8 +33,7 @@ public class Usuario implements UserDetails {
     @Column(name = "data_cadastro")
     private LocalDateTime dataCadastro;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "id_usuario", referencedColumnName = "id")
+    @OneToMany(mappedBy = "usuario")
     private List<Tarefa> tarefas;
 
     @Override
