@@ -3,6 +3,7 @@ package com.backend.hippo_api.business;
 import com.backend.hippo_api.business.converter.TarefaConverter;
 import com.backend.hippo_api.business.dtos.in.TarefaCadastroDTORequest;
 import com.backend.hippo_api.business.dtos.out.TarefaBuscaDadosDTOResponse;
+import com.backend.hippo_api.business.dtos.out.TarefaBuscaPorIdDTOResponse;
 import com.backend.hippo_api.business.dtos.out.TarefaCadastroDTOResponse;
 import com.backend.hippo_api.infrastructure.entity.Tarefa;
 import com.backend.hippo_api.infrastructure.entity.Usuario;
@@ -48,24 +49,18 @@ public class TarefaService {
     }
 
     // Método para buscar todas as Tarefas que estão armazenadas
-    public List<TarefaBuscaDadosDTOResponse> listarTodasTarefas() {
+    public List<TarefaBuscaDadosDTOResponse> listarTarefas(Usuario usuario) {
         return tarefaConverter.converterParaListaTarefaDTOBuscar(
-                tarefaRepository.findAll()
+                tarefaRepository.findByUsuario(usuario)
         );
     }
 
-    // Método para buscar todas as Tarefas de um determinado Usuário
-    public List<TarefaBuscaDadosDTOResponse> listarTarefasUsuario(Long idUsuario) {
-        // Pegar o Usuário através do ID
-        Usuario usuario = usuarioRepository.findById(idUsuario).orElseThrow(
-                () -> new ResourceNotFoundException("Usuario de ID " + idUsuario + " não Encontrado!")
-        );
-
-        // Buscar e Retornar as Tarefas do Usuário
-        return tarefaConverter.converterParaListaTarefaDTOBuscar(
-            tarefaRepository.findByUsuario(usuario).orElseThrow(
-                    () -> new ResourceNotFoundException("Erro: Usuário de ID " + idUsuario + " não Encontrado!")
-            )
+    // Método para buscar uma Tarefa por Id
+    public TarefaBuscaPorIdDTOResponse buscarTarefaPorId(Long id, Usuario usuario) {
+        return tarefaConverter.converterParaTaredaDTOBuscarPorId(
+                tarefaRepository.findByIdAndUsuario(id, usuario).orElseThrow(
+                        () -> new ResourceNotFoundException("Erro: Tarefa de ID " + id + " não Encontrada!")
+                )
         );
     }
 }

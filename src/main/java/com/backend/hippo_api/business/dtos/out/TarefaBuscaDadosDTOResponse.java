@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class TarefaBuscaDadosDTOResponse {
+    private Long id;
     private String nomeTarefa;
     private String descricao;
     private StatusTarefaEnum statusTarefa;

@@ -3,8 +3,10 @@ package com.backend.hippo_api.controller;
 import com.backend.hippo_api.business.TarefaService;
 import com.backend.hippo_api.business.dtos.in.TarefaCadastroDTORequest;
 import com.backend.hippo_api.business.dtos.out.TarefaBuscaDadosDTOResponse;
+import com.backend.hippo_api.business.dtos.out.TarefaBuscaPorIdDTOResponse;
 import com.backend.hippo_api.business.dtos.out.TarefaCadastroDTOResponse;
 
+import com.backend.hippo_api.infrastructure.entity.Usuario;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
@@ -37,12 +39,13 @@ public class TarefaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TarefaBuscaDadosDTOResponse>> listarTarefas() {
-        return ResponseEntity.ok(tarefaService.listarTodasTarefas());
+    public ResponseEntity<List<TarefaBuscaDadosDTOResponse>> listarTarefas(@AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(tarefaService.listarTarefas(usuario));
     }
 
-    @GetMapping("/usuario")
-    public ResponseEntity<List<TarefaBuscaDadosDTOResponse>> listarTarefasUsuario(@RequestParam("idUsuario") Long idUsuario) {
-        return ResponseEntity.ok(tarefaService.listarTarefasUsuario(idUsuario));
+    @GetMapping("/tarefa")
+    public ResponseEntity<TarefaBuscaPorIdDTOResponse> buscarTarefaPorId(@RequestParam("id") Long id,
+                                                                         @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(tarefaService.buscarTarefaPorId(id, usuario));
     }
 }
