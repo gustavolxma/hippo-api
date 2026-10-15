@@ -25,7 +25,7 @@ public class Tarefa {
     @Column(name = "descricao", nullable = false)
     private String descricao;
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 9)
+    @Column(name = "status", length = 30)
     private StatusTarefaEnum statusTarefa;
     @Column(name = "data_criacao")
     private LocalDateTime dataCriacao;

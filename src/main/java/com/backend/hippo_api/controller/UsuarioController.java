@@ -8,8 +8,10 @@ import com.backend.hippo_api.business.dtos.out.UsuarioCadastroDTOResponse;
 import com.backend.hippo_api.infrastructure.security.JwtUtil;
 
 import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,7 +29,11 @@ public class UsuarioController {
 
     @PostMapping
     public ResponseEntity<UsuarioCadastroDTOResponse> cadastrarUsuario(@Valid @RequestBody UsuarioCadastroDTORequest usuarioDTO) {
-        return ResponseEntity.ok(usuarioService.cadastrarUsuario(usuarioDTO));
+        UsuarioCadastroDTOResponse usuario = usuarioService.cadastrarUsuario(usuarioDTO);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(usuario);
     }
 
     @PostMapping("/login")
