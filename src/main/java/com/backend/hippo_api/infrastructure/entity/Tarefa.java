@@ -20,16 +20,16 @@ public class Tarefa {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nome_tarefa", nullable = false)
+    @Column(name = "nome_tarefa")
     private String nomeTarefa;
-    @Column(name = "descricao", nullable = false)
+    @Column(name = "descricao")
     private String descricao;
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
     private StatusTarefaEnum statusTarefa;
     @Column(name = "data_criacao")
     private LocalDateTime dataCriacao;
-    @Column(name = "data_evento", nullable = false)
+    @Column(name = "data_evento")
     private LocalDateTime dataEvento;
 
     @ManyToOne(fetch = FetchType.LAZY)
