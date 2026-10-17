@@ -1,10 +1,9 @@
 package com.backend.hippo_api.business;
 
 import com.backend.hippo_api.business.converter.TarefaConverter;
+import com.backend.hippo_api.business.dtos.in.TarefaAlterarDadosDTORequest;
 import com.backend.hippo_api.business.dtos.in.TarefaCadastroDTORequest;
-import com.backend.hippo_api.business.dtos.out.TarefaBuscaDadosDTOResponse;
-import com.backend.hippo_api.business.dtos.out.TarefaBuscaPorIdDTOResponse;
-import com.backend.hippo_api.business.dtos.out.TarefaCadastroDTOResponse;
+import com.backend.hippo_api.business.dtos.out.*;
 import com.backend.hippo_api.infrastructure.entity.Tarefa;
 import com.backend.hippo_api.infrastructure.entity.Usuario;
 import com.backend.hippo_api.infrastructure.enums.StatusTarefaEnum;
@@ -55,12 +54,63 @@ public class TarefaService {
         );
     }
 
-    // Método para buscar uma Tarefa por Id
+    // Método para buscar uma Tarefa por ID
     public TarefaBuscaPorIdDTOResponse buscarTarefaPorId(Long id, Usuario usuario) {
-        return tarefaConverter.converterParaTaredaDTOBuscarPorId(
+        return tarefaConverter.converterParaTarefaDTOBuscarPorId(
                 tarefaRepository.findByIdAndUsuario(id, usuario).orElseThrow(
                         () -> new ResourceNotFoundException("Erro: Tarefa de ID " + id + " não Encontrada!")
                 )
         );
+    }
+
+    // Método para deletar uma Tarefa por ID
+    public void deletarTarefa(Long id, Usuario usuario) {
+        // Encontrar a Tarefa à ser deletada
+        Tarefa tarefa = tarefaRepository.findByIdAndUsuario(id, usuario).orElseThrow(
+                () -> new ResourceNotFoundException("Erro: Tarefa de ID " + id + " não Encontrada!")
+        );
+
+        // Deletar a Tarefa
+        tarefaRepository.delete(tarefa);
+    }
+
+    // Método para alterar o Status de uma Tarefa por ID
+    public TarefaAlterarStatusDTOResponse alterarStatusTarefa(Long id, StatusTarefaEnum status, Usuario usuario) {
+        try {
+            // Encontrar a Tarefa cujo Status será alterado
+            Tarefa tarefa = tarefaRepository.findByIdAndUsuario(id, usuario).orElseThrow(
+                    () -> new ResourceNotFoundException("Erro: Tarefa de ID " + id + " não Encontrada!")
+            );
+
+            // Alterar o Status da Tarefa
+            tarefa.setStatusTarefa(status);
+
+            // Salvar a alteração do Status
+            return tarefaConverter.converterParaTarefaDTOAlterarStatus(tarefaRepository.save(tarefa));
+        }
+        catch (ResourceNotFoundException e) {
+            throw new ResourceNotFoundException("Erro: Tarefa de ID " + id + " não Encontrada!");
+        }
+    }
+
+    // Método para alterar Dados de uma Tarefa por ID
+    public TarefaAlterarDadosDTOResponse alterarDadosTarefa(Long id,
+                                                            TarefaAlterarDadosDTORequest tarefaDTO,
+                                                            Usuario usuario) {
+        try {
+            // Encontrar a Tarefa à ser alterada
+            Tarefa tarefa = tarefaRepository.findByIdAndUsuario(id, usuario).orElseThrow(
+                    () -> new ResourceNotFoundException("Erro: Tarefa de ID " + id + " não Encontrada!")
+            );
+
+            // Atualizar os Dados da Tarefa
+            Tarefa tarefaAlterada = tarefaConverter.atualizarTarefa(tarefaDTO, tarefa);
+
+            // Salvar a alteração dos Dados
+            return tarefaConverter.converterParaTarefaDTOAlterarDados(tarefaRepository.save(tarefaAlterada));
+        }
+        catch (ResourceNotFoundException e) {
+            throw new ResourceNotFoundException("Erro: Tarefa de ID " + id + " não Encontrada!");
+        }
     }
 }
