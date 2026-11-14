@@ -7,6 +7,7 @@ import com.backend.hippo_api.business.dtos.out.*;
 
 import com.backend.hippo_api.infrastructure.entity.Usuario;
 import com.backend.hippo_api.infrastructure.enums.StatusTarefaEnum;
+
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
@@ -43,8 +44,8 @@ public class TarefaController {
         return ResponseEntity.ok(tarefaService.listarTarefas(usuario));
     }
 
-    @GetMapping("/tarefa")
-    public ResponseEntity<TarefaBuscaPorIdDTOResponse> buscarTarefaPorId(@RequestParam("id") Long id,
+    @GetMapping("/tarefa/{id}")
+    public ResponseEntity<TarefaBuscaPorIdDTOResponse> buscarTarefaPorId(@PathVariable("id") Long id,
                                                                          @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(tarefaService.buscarTarefaPorId(id, usuario));
     }
@@ -56,8 +57,8 @@ public class TarefaController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping
-    public ResponseEntity<TarefaAlterarStatusDTOResponse> alterarStatusTarefaPorId(@RequestParam("id") Long id,
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<TarefaAlterarStatusDTOResponse> alterarStatusTarefaPorId(@PathVariable("id") Long id,
                                                                                    @RequestParam("status") StatusTarefaEnum status,
                                                                                    @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(tarefaService.alterarStatusTarefa(id, status, usuario));
@@ -65,8 +66,8 @@ public class TarefaController {
 
     @PutMapping
     public ResponseEntity<TarefaAlterarDadosDTOResponse> alterarDadosTarefaPorId(@RequestParam("id") Long id,
-                                                                                      @RequestBody TarefaAlterarDadosDTORequest tarefaDTO,
-                                                                                      @AuthenticationPrincipal Usuario usuario) {
+                                                                                 @Valid @RequestBody TarefaAlterarDadosDTORequest tarefaDTO,
+                                                                                 @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(tarefaService.alterarDadosTarefa(id, tarefaDTO, usuario));
     }
 }

@@ -80,16 +80,10 @@ public class TarefaConverter {
 
 
     // Atualizar os Dados de um Tarefa - Atualizar Dados
-    public Tarefa atualizarTarefa(TarefaAlterarDadosDTORequest tarefaDTO, Tarefa tarefa) {
-        return Tarefa.builder()
-                .id(tarefa.getId())
-                .nomeTarefa(tarefaDTO.getNomeTarefa() != null ? tarefaDTO.getNomeTarefa() : tarefa.getNomeTarefa())
-                .descricao(tarefaDTO.getDescricao() != null ? tarefaDTO.getDescricao() : tarefa.getDescricao())
-                .dataEvento(tarefaDTO.getDataEvento() != null ? tarefaDTO.getDataEvento() : tarefa.getDataEvento())
-                .statusTarefa(tarefa.getStatusTarefa())
-                .dataCriacao(tarefa.getDataCriacao())
-                .usuario(tarefa.getUsuario())
-                .build();
+    public void atualizarTarefa(TarefaAlterarDadosDTORequest tarefaDTO, Tarefa tarefa) {
+        if (tarefaDTO.getNomeTarefa() != null) { tarefa.setNomeTarefa(tarefaDTO.getNomeTarefa()); }
+        if (tarefaDTO.getDescricao() != null) { tarefa.setDescricao(tarefaDTO.getDescricao()); }
+        if (tarefaDTO.getDataEvento() != null) { tarefa.setDataEvento(tarefaDTO.getDataEvento()); }
     }
 
     // Converter de Tarefa para TarefaDTO - Alterar Dados
