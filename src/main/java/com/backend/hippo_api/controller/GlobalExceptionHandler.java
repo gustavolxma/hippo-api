@@ -39,7 +39,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponseRecord erro = new ErrorResponseRecord(
                 HttpStatus.UNAUTHORIZED.value(),
-                "E-mail ou Senha Inválidos",
+                "E-mail e/ou Senha Inválidos",
                 LocalDateTime.now()
         );
 
