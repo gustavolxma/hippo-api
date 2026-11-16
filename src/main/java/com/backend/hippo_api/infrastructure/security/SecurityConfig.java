@@ -42,6 +42,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/usuarios").permitAll() // Permite acesso ao endpoint POST /usuario sem autenticação
                         .requestMatchers(HttpMethod.POST, "/usuarios/login").permitAll() // Permite acesso ao endpoint de login sem autenticação
+                        .requestMatchers(HttpMethod.POST,
+                                "/usuarios/verificar-cadastro",
+                                "/usuarios/login/verificar",
+                                "/usuarios/codigo/reenviar").permitAll() // Etapas do Código de Verificação (ainda sem Token)
                         .requestMatchers("/usuarios/**").authenticated() // Requer autenticação para qualquer endpoint que comece com /usuario/
                         .anyRequest().authenticated() // Requer autenticação para todas as outras requisições
                 )
