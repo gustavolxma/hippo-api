@@ -2,6 +2,7 @@ package com.backend.hippo_api.business;
 
 import com.backend.hippo_api.business.converter.UsuarioConverter;
 import com.backend.hippo_api.business.dtos.in.ReenviarCodigoDTORequest;
+import com.backend.hippo_api.business.dtos.in.UsuarioAlterarDadosDTORequest;
 import com.backend.hippo_api.business.dtos.in.UsuarioCadastroDTORequest;
 import com.backend.hippo_api.business.dtos.in.VerificarCodigoDTORequest;
 import com.backend.hippo_api.business.dtos.out.TokenDTOResponse;
@@ -9,6 +10,7 @@ import com.backend.hippo_api.infrastructure.entity.Usuario;
 import com.backend.hippo_api.infrastructure.enums.FinalidadeCodigoEnum;
 import com.backend.hippo_api.infrastructure.exceptions.CodigoInvalidoException;
 import com.backend.hippo_api.infrastructure.exceptions.ConflictException;
+import com.backend.hippo_api.infrastructure.exceptions.RequisicaoInvalidaException;
 import com.backend.hippo_api.infrastructure.repository.UsuarioRepository;
 import com.backend.hippo_api.infrastructure.security.JwtUtil;
 
@@ -132,6 +134,75 @@ class UsuarioServiceTest {
                 new ReenviarCodigoDTORequest("maria@email.com", FinalidadeCodigoEnum.LOGIN)))
                 .isInstanceOf(CodigoInvalidoException.class);
         verify(codigoVerificacaoService, never()).gerarEEnviarCodigo(any(), any(), any());
+    }
+
+    @Test
+    void alterarSoASenhaMantemOEmailEDevolveTokenNovo() {
+        Usuario maria = usuario(true);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(maria));
+        when(jwtUtil.generateToken("maria@email.com")).thenReturn("novo-jwt");
+
+        TokenDTOResponse resposta = service.alterarDadosUsuario(maria,
+                new UsuarioAlterarDadosDTORequest("123456", "maria@email.com", "novasenha123"));
+
+        verify(codigoVerificacaoService).validarCodigo("maria@email.com", FinalidadeCodigoEnum.ALTERAR_CONTA, "123456");
+        assertThat(new BCryptPasswordEncoder().matches("novasenha123", maria.getSenha())).isTrue();
+        assertThat(maria.getEmail()).isEqualTo("maria@email.com");
+        assertThat(resposta.getToken()).isEqualTo("Bearer novo-jwt");
+    }
+
+    @Test
+    void alterarOEmailGeraTokenComOEmailNovo() {
+        Usuario maria = usuario(true);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(maria));
+        when(usuarioRepository.existsByEmail("nova@email.com")).thenReturn(false);
+        when(jwtUtil.generateToken("nova@email.com")).thenReturn("jwt-novo-email");
+
+        TokenDTOResponse resposta = service.alterarDadosUsuario(maria,
+                new UsuarioAlterarDadosDTORequest("123456", "nova@email.com", null));
+
+        // O Código é sempre o enviado para o Email ATUAL
+        verify(codigoVerificacaoService).validarCodigo("maria@email.com", FinalidadeCodigoEnum.ALTERAR_CONTA, "123456");
+        assertThat(maria.getEmail()).isEqualTo("nova@email.com");
+        assertThat(maria.getSenha()).isEqualTo("hash");
+        assertThat(resposta.getToken()).isEqualTo("Bearer jwt-novo-email");
+    }
+
+    @Test
+    void alterarSemNadaParaMudarERecusadoSemGastarOCodigo() {
+        Usuario maria = usuario(true);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(maria));
+
+        assertThatThrownBy(() -> service.alterarDadosUsuario(maria,
+                new UsuarioAlterarDadosDTORequest("123456", "maria@email.com", "")))
+                .isInstanceOf(RequisicaoInvalidaException.class);
+        verify(codigoVerificacaoService, never()).validarCodigo(any(), any(), any());
+    }
+
+    @Test
+    void alterarParaEmailDeOutraContaDaConflito() {
+        Usuario maria = usuario(true);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(maria));
+        when(usuarioRepository.existsByEmail("joao@email.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.alterarDadosUsuario(maria,
+                new UsuarioAlterarDadosDTORequest("123456", "joao@email.com", null)))
+                .isInstanceOf(ConflictException.class);
+        verify(codigoVerificacaoService, never()).validarCodigo(any(), any(), any());
+    }
+
+    @Test
+    void codigoErradoNaoAlteraNada() {
+        Usuario maria = usuario(true);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(maria));
+        doThrow(new CodigoInvalidoException("Código inválido ou expirado!")).when(codigoVerificacaoService)
+                .validarCodigo("maria@email.com", FinalidadeCodigoEnum.ALTERAR_CONTA, "000000");
+
+        assertThatThrownBy(() -> service.alterarDadosUsuario(maria,
+                new UsuarioAlterarDadosDTORequest("000000", null, "novasenha123")))
+                .isInstanceOf(CodigoInvalidoException.class);
+        assertThat(maria.getSenha()).isEqualTo("hash");
+        verify(usuarioRepository, never()).save(any());
     }
 
     @Test

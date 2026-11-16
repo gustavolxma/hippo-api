@@ -3,6 +3,7 @@ package com.backend.hippo_api.controller;
 import com.backend.hippo_api.infrastructure.exceptions.CodigoInvalidoException;
 import com.backend.hippo_api.infrastructure.exceptions.ConflictException;
 import com.backend.hippo_api.infrastructure.exceptions.MuitasRequisicoesException;
+import com.backend.hippo_api.infrastructure.exceptions.RequisicaoInvalidaException;
 import com.backend.hippo_api.infrastructure.exceptions.ResourceNotFoundException;
 import com.backend.hippo_api.infrastructure.exceptions.ServicoExternoException;
 import com.backend.hippo_api.infrastructure.records.ErrorResponseRecord;
@@ -69,6 +70,12 @@ public class GlobalExceptionHandler {
     // Tratar uma CodigoInvalidoException (Código de Verificação errado, expirado ou inexistente)
     @ExceptionHandler(CodigoInvalidoException.class)
     public ResponseEntity<ErrorResponseRecord> handleCodigoInvalidoException(CodigoInvalidoException e) {
+        return erro(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    // Tratar uma RequisicaoInvalidaException (pedido que não faz sentido do jeito que veio)
+    @ExceptionHandler(RequisicaoInvalidaException.class)
+    public ResponseEntity<ErrorResponseRecord> handleRequisicaoInvalidaException(RequisicaoInvalidaException e) {
         return erro(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 

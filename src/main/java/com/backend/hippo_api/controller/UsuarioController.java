@@ -3,12 +3,14 @@ package com.backend.hippo_api.controller;
 import com.backend.hippo_api.business.UsuarioService;
 import com.backend.hippo_api.business.dtos.in.LoginDTORequest;
 import com.backend.hippo_api.business.dtos.in.ReenviarCodigoDTORequest;
+import com.backend.hippo_api.business.dtos.in.UsuarioAlterarDadosDTORequest;
 import com.backend.hippo_api.business.dtos.in.UsuarioCadastroDTORequest;
 import com.backend.hippo_api.business.dtos.in.VerificarCodigoDTORequest;
 import com.backend.hippo_api.business.dtos.out.MensagemDTOResponse;
 import com.backend.hippo_api.business.dtos.out.TokenDTOResponse;
 import com.backend.hippo_api.business.dtos.out.UsuarioBuscaDadosDTOResponse;
 import com.backend.hippo_api.business.dtos.out.UsuarioCadastroDTOResponse;
+import com.backend.hippo_api.infrastructure.entity.Usuario;
 
 import jakarta.validation.Valid;
 
@@ -19,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -69,6 +72,22 @@ public class UsuarioController {
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .body(new MensagemDTOResponse("Novo Código enviado para o Email!"));
+    }
+
+    // Alterar Email ou Senha em duas etapas (autenticado): pede o Código e depois envia o PUT com ele
+    @PostMapping("/conta/codigo")
+    public ResponseEntity<MensagemDTOResponse> enviarCodigoAlterarConta(@AuthenticationPrincipal Usuario usuario) {
+        usuarioService.enviarCodigoAlterarConta(usuario);
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .body(new MensagemDTOResponse("Código enviado para o Email atual!"));
+    }
+
+    @PutMapping
+    public ResponseEntity<TokenDTOResponse> alterarDadosUsuario(@Valid @RequestBody UsuarioAlterarDadosDTORequest alterarDTO,
+                                                                @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(usuarioService.alterarDadosUsuario(usuario, alterarDTO));
     }
 
     @GetMapping

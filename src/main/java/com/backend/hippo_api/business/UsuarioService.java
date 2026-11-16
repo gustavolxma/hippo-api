@@ -2,6 +2,7 @@ package com.backend.hippo_api.business;
 
 import com.backend.hippo_api.business.converter.UsuarioConverter;
 import com.backend.hippo_api.business.dtos.in.ReenviarCodigoDTORequest;
+import com.backend.hippo_api.business.dtos.in.UsuarioAlterarDadosDTORequest;
 import com.backend.hippo_api.business.dtos.in.UsuarioCadastroDTORequest;
 import com.backend.hippo_api.business.dtos.in.VerificarCodigoDTORequest;
 import com.backend.hippo_api.business.dtos.out.TokenDTOResponse;
@@ -11,6 +12,7 @@ import com.backend.hippo_api.infrastructure.entity.Usuario;
 import com.backend.hippo_api.infrastructure.enums.FinalidadeCodigoEnum;
 import com.backend.hippo_api.infrastructure.exceptions.CodigoInvalidoException;
 import com.backend.hippo_api.infrastructure.exceptions.ConflictException;
+import com.backend.hippo_api.infrastructure.exceptions.RequisicaoInvalidaException;
 import com.backend.hippo_api.infrastructure.exceptions.ResourceNotFoundException;
 import com.backend.hippo_api.infrastructure.repository.UsuarioRepository;
 import com.backend.hippo_api.infrastructure.security.JwtUtil;
@@ -91,6 +93,45 @@ public class UsuarioService {
         codigoVerificacaoService.gerarEEnviarCodigo(usuario.getEmail(), usuario.getNome(), finalidade);
     }
 
+    // Método para enviar o Código que autoriza alterar Email ou Senha (vai para o Email atual)
+    public void enviarCodigoAlterarConta(Usuario usuarioLogado) {
+        Usuario usuario = buscarPorId(usuarioLogado.getId());
+        codigoVerificacaoService.gerarEEnviarCodigo(usuario.getEmail(), usuario.getNome(), FinalidadeCodigoEnum.ALTERAR_CONTA);
+    }
+
+    // Método para alterar Email e/ou Senha. Só altera o que vier preenchido.
+    // Devolve um Token novo: o Token guarda o Email, então o antigo para de valer se o Email mudar.
+    public TokenDTOResponse alterarDadosUsuario(Usuario usuarioLogado, UsuarioAlterarDadosDTORequest alterarDTO) {
+        Usuario usuario = buscarPorId(usuarioLogado.getId());
+
+        String novoEmail = textoOuNulo(alterarDTO.getNovoEmail());
+        boolean alterarEmail = novoEmail != null && !novoEmail.equalsIgnoreCase(usuario.getEmail());
+        boolean alterarSenha = textoOuNulo(alterarDTO.getNovaSenha()) != null;
+
+        // Conferir o pedido antes de gastar o Código
+        if (!alterarEmail && !alterarSenha) {
+            throw new RequisicaoInvalidaException("Informe um novo Email ou uma nova Senha!");
+        }
+        if (alterarEmail && usuarioRepository.existsByEmail(novoEmail)) {
+            throw new ConflictException("Erro: Email " + novoEmail + " já existe!");
+        }
+
+        codigoVerificacaoService.validarCodigo(usuario.getEmail(), FinalidadeCodigoEnum.ALTERAR_CONTA, alterarDTO.getCodigo());
+
+        if (alterarEmail) {
+            usuario.setEmail(novoEmail);
+        }
+        if (alterarSenha) {
+            usuario.setSenha(passwordEncoder.encode(alterarDTO.getNovaSenha()));
+        }
+        Usuario salvo = usuarioRepository.save(usuario);
+
+        return TokenDTOResponse.builder()
+                .token("Bearer " + jwtUtil.generateToken(salvo.getEmail()))
+                .usuario(usuarioConverter.converterParaUsuarioDTOBuscarDados(salvo))
+                .build();
+    }
+
     public UsuarioBuscaDadosDTOResponse buscarUsuarioPorId(Long id) {
         return usuarioConverter.converterParaUsuarioDTOBuscarDados(
                 usuarioRepository.findById(id).orElseThrow(
@@ -118,6 +159,17 @@ public class UsuarioService {
                 .token("Bearer " + jwtUtil.generateToken(usuario.getEmail()))
                 .usuario(usuarioConverter.converterParaUsuarioDTOBuscarDados(usuario))
                 .build();
+    }
+
+    // O Usuário do Token pode estar desatualizado, então sempre buscamos a versão do Banco
+    private Usuario buscarPorId(Long id) {
+        return usuarioRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Erro: Usuário de ID " + id + " não Encontrado!")
+        );
+    }
+
+    private String textoOuNulo(String texto) {
+        return texto == null || texto.isBlank() ? null : texto.trim();
     }
 
     private Usuario buscarPorEmail(String email) {
