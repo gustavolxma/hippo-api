@@ -22,7 +22,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -95,6 +97,47 @@ class UsuarioControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email": "maria@email.com", "codigo": "12ab"}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void alterarEmailOuSenhaExigeLogin() throws Exception {
+        mockMvc.perform(put("/usuarios")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"codigo": "123456", "novaSenha": "novasenha123"}
+                                """))
+                .andExpect(status().is4xxClientError());
+
+        mockMvc.perform(post("/usuarios/conta/codigo")).andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void alterarEmailOuSenhaLogadoDevolveTokenNovo() throws Exception {
+        Usuario maria = Usuario.builder().id(1L).nome("Maria").email("maria@email.com").senha("hash").build();
+        when(usuarioService.alterarDadosUsuario(any(), any()))
+                .thenReturn(TokenDTOResponse.builder().token("Bearer novo").build());
+
+        mockMvc.perform(put("/usuarios")
+                        .with(user(maria))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"codigo": "123456", "novoEmail": "nova@email.com"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("Bearer novo"));
+    }
+
+    @Test
+    void novaSenhaCurtaEhRecusadaNaValidacao() throws Exception {
+        Usuario maria = Usuario.builder().id(1L).nome("Maria").email("maria@email.com").senha("hash").build();
+
+        mockMvc.perform(put("/usuarios")
+                        .with(user(maria))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"codigo": "123456", "novaSenha": "curta"}
                                 """))
                 .andExpect(status().isBadRequest());
     }
