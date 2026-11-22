@@ -1,7 +1,11 @@
 package com.backend.hippo_api.controller;
 
+import com.backend.hippo_api.infrastructure.exceptions.CodigoInvalidoException;
 import com.backend.hippo_api.infrastructure.exceptions.ConflictException;
+import com.backend.hippo_api.infrastructure.exceptions.MuitasRequisicoesException;
+import com.backend.hippo_api.infrastructure.exceptions.RequisicaoInvalidaException;
 import com.backend.hippo_api.infrastructure.exceptions.ResourceNotFoundException;
+import com.backend.hippo_api.infrastructure.exceptions.ServicoExternoException;
 import com.backend.hippo_api.infrastructure.records.ErrorResponseRecord;
 
 import org.springframework.http.HttpStatus;
@@ -61,6 +65,36 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(erro);
+    }
+
+    // Tratar uma CodigoInvalidoException (Código de Verificação errado, expirado ou inexistente)
+    @ExceptionHandler(CodigoInvalidoException.class)
+    public ResponseEntity<ErrorResponseRecord> handleCodigoInvalidoException(CodigoInvalidoException e) {
+        return erro(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    // Tratar uma RequisicaoInvalidaException (pedido que não faz sentido do jeito que veio)
+    @ExceptionHandler(RequisicaoInvalidaException.class)
+    public ResponseEntity<ErrorResponseRecord> handleRequisicaoInvalidaException(RequisicaoInvalidaException e) {
+        return erro(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    // Tratar uma MuitasRequisicoesException (pedidos repetidos rápido demais)
+    @ExceptionHandler(MuitasRequisicoesException.class)
+    public ResponseEntity<ErrorResponseRecord> handleMuitasRequisicoesException(MuitasRequisicoesException e) {
+        return erro(HttpStatus.TOO_MANY_REQUESTS, e.getMessage());
+    }
+
+    // Tratar uma ServicoExternoException (Email ou IA fora do ar)
+    @ExceptionHandler(ServicoExternoException.class)
+    public ResponseEntity<ErrorResponseRecord> handleServicoExternoException(ServicoExternoException e) {
+        return erro(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage());
+    }
+
+    private ResponseEntity<ErrorResponseRecord> erro(HttpStatus status, String mensagem) {
+        return ResponseEntity
+                .status(status)
+                .body(new ErrorResponseRecord(status.value(), mensagem, LocalDateTime.now()));
     }
 
     // Tratar uma MethodArgumentNotValidException
