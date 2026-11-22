@@ -11,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -63,8 +64,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
-            catch (JwtException e) {
-                throw new JwtException("O Token é Inválido ou está Expirado!");
+            catch (JwtException | UsernameNotFoundException e) {
+                // Token inválido, expirado ou de uma conta que não existe mais (ex.: Email trocado):
+                // segue sem autenticar, e as rotas protegidas respondem 401 para o app pedir login de novo
+                SecurityContextHolder.clearContext();
             }
         }
 
