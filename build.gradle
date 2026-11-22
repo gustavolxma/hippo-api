@@ -39,6 +39,8 @@ dependencies {
 
 	testCompileOnly 'org.projectlombok:lombok'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// Banco em memória só para o teste que sobe a aplicação inteira (sem precisar de PostgreSQL)
+	testRuntimeOnly 'com.h2database:h2'
 
 	testAnnotationProcessor 'org.projectlombok:lombok'
 }
