@@ -111,6 +111,18 @@ class FluxoContaIntegrationTest {
     }
 
     @Test
+    void healthEhPublicoETokenInvalidoRecebe401() throws Exception {
+        mockMvc.perform(get("/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+
+        // Sem Token ou com Token inválido o app recebe 401 (e não 500), para pedir login de novo
+        mockMvc.perform(get("/tarefas")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/tarefas").header("Authorization", "Bearer token.invalido.qualquer"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void cincoCodigosErradosInvalidamOCodigoCerto() throws Exception {
         String email = "joao@email.com";
         mockMvc.perform(post("/usuarios").contentType(MediaType.APPLICATION_JSON)

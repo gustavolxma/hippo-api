@@ -1,0 +1,59 @@
+# Sobe a API completa no servidor: banco PostgreSQL + API + Caddy (HTTPS automático).
+# Uso: copie o .env.example para .env, preencha e rode "docker compose up -d --build".
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hippo
+      POSTGRES_USER: hippo
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Preencha DB_PASSWORD no .env}
+      TZ: America/Sao_Paulo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hippo -d hippo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Sem "ports": o banco só é acessível pela API, nunca pela internet
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/hippo
+      DB_USERNAME: hippo
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Preencha JWT_SECRET no .env}
+      JWT_VALIDADE_HORAS: ${JWT_VALIDADE_HORAS:-168}
+      EMAIL_PROVEDOR: ${EMAIL_PROVEDOR:-brevo}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      EMAIL_REMETENTE: ${EMAIL_REMETENTE:-}
+      EMAIL_REMETENTE_NOME: ${EMAIL_REMETENTE_NOME:-Hippo}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODELO: ${GEMINI_MODELO:-gemini-flash-lite-latest}
+    # Sem "ports": a API só recebe requisições pelo Caddy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO:?Preencha DOMINIO no .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

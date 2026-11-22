@@ -1,0 +1,6 @@
+# O Caddy pega o certificado HTTPS (Let's Encrypt) sozinho para o domínio
+# e repassa as requisições para a API.
+{$DOMINIO} {
+	encode gzip
+	reverse_proxy api:8080
+}
