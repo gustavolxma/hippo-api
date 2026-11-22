@@ -32,6 +32,11 @@ public class Usuario implements UserDetails {
     private String senha;
     @Column(name = "data_cadastro")
     private LocalDateTime dataCadastro;
+    // Vira true quando o Usuário confirma o Código enviado por Email (no Cadastro ou no Login).
+    // O DEFAULT permite adicionar a coluna em bancos que já têm Usuários.
+    @Builder.Default
+    @Column(name = "email_verificado", nullable = false, columnDefinition = "boolean default false")
+    private boolean emailVerificado = false;
 
     @OneToMany(mappedBy = "usuario")
     private List<Tarefa> tarefas;
