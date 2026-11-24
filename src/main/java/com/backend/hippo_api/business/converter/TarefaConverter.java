@@ -4,9 +4,11 @@ import com.backend.hippo_api.business.dtos.in.TarefaAlterarDadosDTORequest;
 import com.backend.hippo_api.business.dtos.in.TarefaCadastroDTORequest;
 import com.backend.hippo_api.business.dtos.out.*;
 import com.backend.hippo_api.infrastructure.entity.Tarefa;
+import com.backend.hippo_api.infrastructure.enums.PrioridadeTarefaEnum;
 
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -15,8 +17,11 @@ public class TarefaConverter {
     public Tarefa converterParaTarefaCadastro(TarefaCadastroDTORequest tarefaDTO) {
         return Tarefa.builder()
                 .nomeTarefa(tarefaDTO.getNomeTarefa())
-                .descricao(tarefaDTO.getDescricao())
+                .descricao(textoOuVazio(tarefaDTO.getDescricao()))
                 .dataEvento(tarefaDTO.getDataEvento())
+                .temHora(temHora(tarefaDTO.getDataEvento(), tarefaDTO.getTemHora()))
+                .prioridade(prioridadeOuMedia(tarefaDTO.getPrioridade()))
+                .lembreteMinutosAntes(tarefaDTO.getLembreteMinutosAntes())
                 .build();
     }
 
@@ -29,6 +34,9 @@ public class TarefaConverter {
                 .statusTarefa(tarefa.getStatusTarefa())
                 .dataCriacao(tarefa.getDataCriacao())
                 .dataEvento(tarefa.getDataEvento())
+                .temHora(temHora(tarefa))
+                .prioridade(prioridadeOuMedia(tarefa.getPrioridade()))
+                .lembreteMinutosAntes(tarefa.getLembreteMinutosAntes())
                 .build();
     }
 
@@ -43,6 +51,9 @@ public class TarefaConverter {
                 .statusTarefa(tarefa.getStatusTarefa())
                 .dataCriacao(tarefa.getDataCriacao())
                 .dataEvento(tarefa.getDataEvento())
+                .temHora(temHora(tarefa))
+                .prioridade(prioridadeOuMedia(tarefa.getPrioridade()))
+                .lembreteMinutosAntes(tarefa.getLembreteMinutosAntes())
                 .idUsuario(tarefa.getUsuario().getId())
                 .build();
     }
@@ -62,6 +73,9 @@ public class TarefaConverter {
                 .statusTarefa(tarefa.getStatusTarefa())
                 .dataCriacao(tarefa.getDataCriacao())
                 .dataEvento(tarefa.getDataEvento())
+                .temHora(temHora(tarefa))
+                .prioridade(prioridadeOuMedia(tarefa.getPrioridade()))
+                .lembreteMinutosAntes(tarefa.getLembreteMinutosAntes())
                 .build();
     }
 
@@ -74,6 +88,9 @@ public class TarefaConverter {
                 .descricao(tarefa.getDescricao())
                 .statusTarefa(tarefa.getStatusTarefa())
                 .dataEvento(tarefa.getDataEvento())
+                .temHora(temHora(tarefa))
+                .prioridade(prioridadeOuMedia(tarefa.getPrioridade()))
+                .lembreteMinutosAntes(tarefa.getLembreteMinutosAntes())
                 .build();
     }
 
@@ -81,9 +98,12 @@ public class TarefaConverter {
 
     // Atualizar os Dados de um Tarefa - Atualizar Dados
     public void atualizarTarefa(TarefaAlterarDadosDTORequest tarefaDTO, Tarefa tarefa) {
-        if (tarefaDTO.getNomeTarefa() != null) { tarefa.setNomeTarefa(tarefaDTO.getNomeTarefa()); }
-        if (tarefaDTO.getDescricao() != null) { tarefa.setDescricao(tarefaDTO.getDescricao()); }
-        if (tarefaDTO.getDataEvento() != null) { tarefa.setDataEvento(tarefaDTO.getDataEvento()); }
+        tarefa.setNomeTarefa(tarefaDTO.getNomeTarefa());
+        tarefa.setDescricao(textoOuVazio(tarefaDTO.getDescricao()));
+        tarefa.setDataEvento(tarefaDTO.getDataEvento());
+        tarefa.setTemHora(temHora(tarefaDTO.getDataEvento(), tarefaDTO.getTemHora()));
+        tarefa.setPrioridade(prioridadeOuMedia(tarefaDTO.getPrioridade()));
+        tarefa.setLembreteMinutosAntes(tarefaDTO.getLembreteMinutosAntes());
     }
 
     // Converter de Tarefa para TarefaDTO - Alterar Dados
@@ -94,6 +114,26 @@ public class TarefaConverter {
                 .statusTarefa(tarefa.getStatusTarefa())
                 .dataCriacao(tarefa.getDataCriacao())
                 .dataEvento(tarefa.getDataEvento())
+                .temHora(temHora(tarefa))
+                .prioridade(prioridadeOuMedia(tarefa.getPrioridade()))
+                .lembreteMinutosAntes(tarefa.getLembreteMinutosAntes())
                 .build();
+    }
+
+    private String textoOuVazio(String texto) {
+        return texto == null ? "" : texto.trim();
+    }
+
+    // Tarefas criadas antes desses campos existirem não têm prioridade nem temHora salvos
+    private PrioridadeTarefaEnum prioridadeOuMedia(PrioridadeTarefaEnum prioridade) {
+        return prioridade == null ? PrioridadeTarefaEnum.MEDIA : prioridade;
+    }
+
+    private boolean temHora(Tarefa tarefa) {
+        return temHora(tarefa.getDataEvento(), tarefa.getTemHora());
+    }
+
+    private boolean temHora(LocalDateTime dataEvento, Boolean temHora) {
+        return dataEvento != null && !Boolean.FALSE.equals(temHora);
     }
 }
