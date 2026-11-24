@@ -1,5 +1,6 @@
 package com.backend.hippo_api.business.dtos.out;
 
+import com.backend.hippo_api.infrastructure.enums.PrioridadeTarefaEnum;
 import com.backend.hippo_api.infrastructure.enums.StatusTarefaEnum;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -22,5 +23,8 @@ public class TarefaBuscaDadosDTOResponse {
     private LocalDateTime dataCriacao;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime dataEvento;
+    private Boolean temHora;
+    private PrioridadeTarefaEnum prioridade;
+    private Integer lembreteMinutosAntes;
     private Long idUsuario;
 }
